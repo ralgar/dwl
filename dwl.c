@@ -2144,8 +2144,8 @@ tile(Monitor *mon)
 
 	nx = mon->w.x;
 	ny = 0;
-	nw = mon->w.width;
-	nh = mon->w.height;
+	nw = mon->w.width - gappx * 2;
+	nh = mon->w.height - gappx * 2;
 
 	wl_list_for_each(c, &clients, link)
 		if (VISIBLEON(c, mon) && !c->isfloating && !c->isfullscreen){
@@ -2157,8 +2157,11 @@ tile(Monitor *mon)
 				else
 					nw /= 2;
 			}
-			if((i % 4) == 0)
+			if((i % 4) == 0) {
 				ny += nh;
+				if(i == 4)		// Fix 1px offset on some tiles
+					nh += 1;
+			}
 			else if((i % 4) == 1)
 				nx += nw;
 			else if((i % 4) == 2)
@@ -2172,10 +2175,10 @@ tile(Monitor *mon)
 				ny = mon->w.y;
 			}
 			else if(i == 1)
-				nw = mon->w.width - nw;
+				nw = mon->w.width - nw - gappx * 2;
 			i++;
 		}
-		resize(c, nx, ny, nw, nh, 0);
+		resize(c, nx + gappx * 2, ny + gappx * 2, nw - gappx * 2, nh - gappx * 2, 0);
 	}
 }
 
