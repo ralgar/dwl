@@ -1366,7 +1366,11 @@ mapnotify(struct wl_listener *listener, void *data)
 	c->geom.height += 2 * c->bw;
 
 	/* Insert this client into client lists. */
-	wl_list_insert(&clients, &c->link);
+	if (clients.prev)
+		// tile at the bottom
+		wl_list_insert(clients.prev, &c->link);
+	else
+		wl_list_insert(&clients, &c->link);
 	wl_list_insert(&fstack, &c->flink);
 
 	/* Set initial monitor, tags, floating status, and focus */
@@ -2127,35 +2131,51 @@ tagmon(const Arg *arg)
 }
 
 void
-tile(Monitor *m)
+tile(Monitor *mon)
 {
-	unsigned int i, n = 0, h, mw, my, ty;
+	unsigned int i=0, n=0, nx, ny, nw, nh;
 	Client *c;
 
 	wl_list_for_each(c, &clients, link)
-		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen)
+		if (VISIBLEON(c, mon) && !c->isfloating && !c->isfullscreen)
 			n++;
-	if (n == 0)
+	if(n == 0)
 		return;
 
-	if (n > m->nmaster)
-		mw = m->nmaster ? m->w.width * m->mfact : 0;
-	else
-		mw = m->w.width;
-	i = my = ty = 0;
-	wl_list_for_each(c, &clients, link) {
-		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
-			continue;
-		if (i < m->nmaster) {
-			h = (m->w.height - my) / (MIN(n, m->nmaster) - i);
-			resize(c, m->w.x, m->w.y + my, mw, h, 0);
-			my += c->geom.height;
-		} else {
-			h = (m->w.height - ty) / (n - i);
-			resize(c, m->w.x + mw, m->w.y + ty, m->w.width - mw, h, 0);
-			ty += c->geom.height;
+	nx = mon->w.x;
+	ny = 0;
+	nw = mon->w.width;
+	nh = mon->w.height;
+
+	wl_list_for_each(c, &clients, link)
+		if (VISIBLEON(c, mon) && !c->isfloating && !c->isfullscreen){
+		if((i % 2 && nh / 2 > 2 * c->bw)
+		   || (!(i % 2) && nw / 2 > 2 * c->bw)) {
+			if(i < n - 1) {
+				if(i % 2)
+					nh /= 2;
+				else
+					nw /= 2;
+			}
+			if((i % 4) == 0)
+				ny += nh;
+			else if((i % 4) == 1)
+				nx += nw;
+			else if((i % 4) == 2)
+				ny += nh;
+			else if((i % 4) == 3)
+				nx += nw;
+			if(i == 0)
+			{
+				if(n != 1)
+					nw = mon->w.width * mon->mfact;
+				ny = mon->w.y;
+			}
+			else if(i == 1)
+				nw = mon->w.width - nw;
+			i++;
 		}
-		i++;
+		resize(c, nx, ny, nw, nh, 0);
 	}
 }
 
