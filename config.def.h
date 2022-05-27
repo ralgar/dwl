@@ -7,6 +7,12 @@ static const float rootcolor[]      = {0.3, 0.3, 0.3, 1.0};
 static const float bordercolor[]    = {0.243, 0.266, 0.321, 1.0};
 static const float focuscolor[]     = {0.368, 0.388, 0.439, 1.0};
 
+/* autostart */
+static const char *const autostart[] = {
+    "sh", "-c", "waybar", NULL,
+    NULL /* terminate */
+};
+
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
